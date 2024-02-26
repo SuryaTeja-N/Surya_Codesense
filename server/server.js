@@ -1,7 +1,11 @@
 import express from 'express'
 import * as dotenv from 'dotenv'
 import cors from 'cors'
-import OpenAI from 'openai'
+import {GoogleGenerativeAI,
+  HarmCategory,
+  HarmBlockThreshold,} from "@google/generative-ai";
+
+
 
 dotenv.config()
 
@@ -11,42 +15,85 @@ dotenv.config()
 
 // const openai = new OpenAIApi(configuration);
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+// const openai = new OpenAI({
+//     apiKey: process.env.API_KEY,
+//   });
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+// node --version # Should be >= 18
+// npm install @google/generative-ai
 
-app.get('/', async (req, res) => {
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get("/", async (req, res) => {
   res.status(200).send({
-    message: 'Hello guys... this is Surya.'
-  })
-})
+    message: "Hello guys... this is Surya.",
+  });
+});
 
-app.post('/', async (req, res) => {
+app.post("/", async (req, res) => {
   try {
     const prompt = req.body.prompt;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      prompt: `${prompt}`,
+    // Specify the model name and the API key
+    const MODEL_NAME = "gemini-1.0-pro";
+    const API_KEY = process.env.API_KEY;
+
+    // Create an instance of the Google Generative AI class
+    const genAI = new GoogleGenerativeAI(API_KEY);
+
+    // Get the generative model object
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+
+    // Define the generation config
+    const generationConfig = {
       temperature: 0, // Higher values means the model will take more risks.
-      max_tokens: 3000, // The maximum number of tokens to generate in the completion. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
-      top_p: 1, // alternative to sampling with temperature, called nucleus sampling
-      frequency_penalty: 0.5, // Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-      presence_penalty: 0, // Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+      topK: 1, // alternative to sampling with temperature, called nucleus sampling
+      topP: 1, // alternative to sampling with temperature, called nucleus sampling
+      maxOutputTokens: 3000, // The maximum number of tokens to generate in the completion. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
+    };
+
+    // Define the safety settings
+    const safetySettings = [
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+    ];
+
+    // Create a chat object
+    const chat = model.startChat({
+      generationConfig,
+      safetySettings,
+      history: [],
     });
 
+    // Send and receive messages from the generative model
+    const result = await chat.sendMessage(prompt);
+    const response = result.response;
+
+    // Send the response text to the client
     res.status(200).send({
-      bot: response.data.choices[0].text
+      bot: response.text(),
     });
-
   } catch (error) {
-    console.error(error)
-    res.status(500).send(error || 'Something went wrong');
+    console.error(error);
+    res.status(500).send(error || "Something went wrong");
   }
-})
+});
 
-app.listen(5000, () => console.log('AI server started on http://localhost:5000'))
+app.listen(5000, () => console.log("AI server started on http://localhost:5000"));
