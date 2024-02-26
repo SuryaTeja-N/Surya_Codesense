@@ -27,6 +27,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Specify the model name and the API key
+const MODEL_NAME = process.env.Model;
+const API_KEY = process.env.API_KEY;
+
+// Create an instance of the Google Generative AI class
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+// Get the generative model object
+const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+
 app.get("/", async (req, res) => {
   res.status(200).send({
     message: "Hello guys... this is Surya.",
@@ -37,42 +47,20 @@ app.post("/", async (req, res) => {
   try {
     const prompt = req.body.prompt;
 
-    // Specify the model name and the API key
-    const MODEL_NAME = "gemini-1.0-pro";
-    const API_KEY = process.env.API_KEY;
-
-    // Create an instance of the Google Generative AI class
-    const genAI = new GoogleGenerativeAI(API_KEY);
-
-    // Get the generative model object
-    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-
     // Define the generation config
     const generationConfig = {
-      temperature: 0, // Higher values means the model will take more risks.
-      topK: 1, // alternative to sampling with temperature, called nucleus sampling
-      topP: 1, // alternative to sampling with temperature, called nucleus sampling
-      maxOutputTokens: 3000, // The maximum number of tokens to generate in the completion. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
+      temperature: 0,
+      topK: 1,
+      topP: 1,
+      maxOutputTokens: 3000,
     };
 
     // Define the safety settings
     const safetySettings = [
-      {
-        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-      },
+      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
     ];
 
     // Create a chat object
@@ -83,7 +71,7 @@ app.post("/", async (req, res) => {
     });
 
     // Send and receive messages from the generative model
-    const result = await chat.sendMessage(prompt);
+    const result = await chat.sendMessage(process.env.rules + prompt);
     const response = result.response;
 
     // Send the response text to the client
@@ -91,9 +79,11 @@ app.post("/", async (req, res) => {
       bot: response.text(),
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).send(error || "Something went wrong");
+    console.error("Error processing request:", error.message);
+    console.error("Stack trace:", error.stack);
+    res.status(500).send(error.message || "Something went wrong");
   }
 });
 
-app.listen(5000, () => console.log("AI server started on http://localhost:5000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`AI server started on http://localhost:${PORT}`));

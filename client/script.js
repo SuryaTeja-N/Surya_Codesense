@@ -98,17 +98,37 @@ const handleSubmit = async (e) => {
     clearInterval(loadInterval)
     messageDiv.innerHTML = " "
 
+    // if (response.ok) {
+    //     const data = await response.json();
+    //     const parsedData = data.bot.trim() // trims any trailing spaces/'\n' 
+
+    //     typeText(messageDiv, parsedData)
+    // } else {
+    //     const err = await response.text()
+
+    //     messageDiv.innerHTML = "Something wrong"
+    //     alert(err)
+    // }
     if (response.ok) {
-        const data = await response.json();
-        const parsedData = data.bot.trim() // trims any trailing spaces/'\n' 
-
-        typeText(messageDiv, parsedData)
+        try {
+            const data = await response.json();
+            const parsedData = data.bot; // No need to trim here
+    
+            if (parsedData) {
+                typeText(messageDiv, parsedData);
+            } else {
+                messageDiv.innerHTML = "No response from the server";
+            }
+        } catch (error) {
+            console.error("Error parsing JSON response:", error);
+            messageDiv.innerHTML = "Error parsing server response";
+        }
     } else {
-        const err = await response.text()
-
-        messageDiv.innerHTML = "Something went wrong"
-        alert(err)
+        const errorMessage = await response.text();
+        console.error("Server error:", errorMessage);
+        messageDiv.innerHTML = "Server error: " + errorMessage;
     }
+    
 }
 
 form.addEventListener('submit', handleSubmit)
