@@ -74,10 +74,12 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  object-fit: contain;
 }
 
 .ai .profile {
-  background: #10a37f;
+  background: #424046;
+  object-fit: contain;
 }
 
 .profile img {
@@ -147,4 +149,5 @@ button {
 form img {
   width: 30px;
   height: 30px;
+  object-fit: contain;
 }
