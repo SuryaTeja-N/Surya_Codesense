@@ -85,7 +85,7 @@ const handleSubmit = async (e) => {
     // messageDiv.innerHTML = "..."
     loader(messageDiv)
 
-    const response = await fetch('https://suryaai.azurewebsites.net', {
+    const response = await fetch('https://surya-codesense.onrender.com', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
