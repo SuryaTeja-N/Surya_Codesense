@@ -118,9 +118,10 @@ form {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
+  margin-bottom: 60px;
   padding: 10px;
   background: #40414F;
-
+  border-radius: 90px;
   display: flex;
   flex-direction: row;
   gap: 10px;
