@@ -1,8 +1,11 @@
 import bot from './assets/bot.svg'
 import user from './assets/user.svg'
 
-const form = document.querySelector('form')
+// const form = document.querySelector('form')
 const chatContainer = document.querySelector('#chat_container')
+const form = document.querySelector('#chat_form');
+const welcomeSection = document.querySelector('#welcome');
+
 
 let loadInterval
 
@@ -65,6 +68,9 @@ const handleSubmit = async (e) => {
     e.preventDefault()
 
     const data = new FormData(form)
+
+    // Hide welcome section
+    welcomeSection.style.display = 'none';
 
     // user's chatstripe
     chatContainer.innerHTML += chatStripe(false, data.get('prompt'))
@@ -131,9 +137,10 @@ const handleSubmit = async (e) => {
     
 }
 
-form.addEventListener('submit', handleSubmit)
+form.addEventListener('submit', handleSubmit);
+
 form.addEventListener('keyup', (e) => {
     if (e.keyCode === 13) {
-        handleSubmit(e)
+        handleSubmit(e);
     }
 })
